@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[7]:
-
-
 import pandas as pd
 import numpy as np
 import datetime
@@ -12,10 +8,6 @@ import re
 import os
 import time
 from csv import reader
-
-
-# In[2]:
-
 
 #makes floats diplay commas and two decimals
 pd.options.display.float_format = '{:,.2f}'.format
@@ -34,26 +26,16 @@ pd.set_option('display.max_columns', None)
 
 
 # ## Scraping the Registered Voter Population
-# I'm scraping all of the Voter Registration Statistics table rows and putting the date, title, and link into the vr_tbl.csv file. I'm going to use the file to loop through the links to get to the files.
-
-# In[4]:
-
+# I'm scraping all of the Voter Registration Statistics table rows and putting the date, title, and link into 
+# the vr_tbl.csv file. I'm going to use the file to loop through the links to get to the files.
 
 from requests_html import HTML, HTMLSession
 import csv
 import urllib
 
-
-# In[5]:
-
-
 # Go to https://elections.wi.gov/index.php/publications/statistics/registration
 session = HTMLSession()
 r = session.get('https://elections.wi.gov/index.php/publications/statistics/registration')
-
-
-# In[6]:
-
 
 # Capture the table of Registered Voter Population Statistics over the past
 table = r.html.find('tbody', first=True)
@@ -63,11 +45,7 @@ rows = table.find('tr')
 most_recent_date = rows[0].find('time', first=True).text
 most_recent = rows[0].find('a', first=True).attrs['href']
 
-
 # ### Get County and Wards Files
-
-# In[8]:
-
 
 # stores url to get to the page with the files
 starter_url = 'https://elections.wi.gov'
@@ -77,18 +55,10 @@ url = starter_url + most_recent
 date_pattern = re.compile(r'(\d{2})/(\d{2})/(\d{4})')
 date = date_pattern.sub(r'\3\1\2', most_recent_date)
 
-
-# In[9]:
-
-
 # Captures the tables with the files
 month = session.get(url)
 table = month.html.find('tbody', first=True)
 file_rows = table.find('tr')
-
-
-# In[10]:
-
 
 for file_row in file_rows:
     title = file_row.find('a', first=True).text
@@ -108,10 +78,6 @@ for file_row in file_rows:
 
 
 # ## Scraping the Absentee Ballot Stats
-
-# In[11]:
-
-
 # Go the page with all of the AVEV entries
 avev_url = 'https://elections.wi.gov/publications/statistics/absentee'
 avev = session.get(avev_url)
@@ -119,10 +85,6 @@ avev = session.get(avev_url)
 # Captures the table with all of the AVEV entries
 avev_tbl = avev.html.find('tbody', first=True)
 rows = avev_tbl.find('tr')
-
-
-# In[12]:
-
 
 for row in rows: # loop through all of the AVEV entries
     row_title = row.find('a', first=True).text
@@ -160,18 +122,9 @@ for row in rows: # loop through all of the AVEV entries
 
 
 # # Munging
-
-# In[17]:
-
-
 files = glob.glob('scrapped_files/*')
 
-
 # ## Dataframe the Files
-
-# In[32]:
-
-
 avev_ctys = []
 avev_munis = []
 
@@ -206,99 +159,26 @@ for file in files:
             
             avev_munis.append(avev_muni)
 
-
-# In[36]:
-
-
 avev_ctys_df = pd.concat(avev_ctys)
-
-
-# In[38]:
-
-
 avev_munis_df = pd.concat(avev_munis)
-
 
 # ## Join the Dataframes
 
 # ### Counties
-
-# In[40]:
-
-
 cty.columns = ['HINDI', 'County', 'Registered Voters', 'vr_date']
-
-
-# In[54]:
-
-
 cty.loc[73, 'HINDI'] = '99999'
-
-
-# In[47]:
-
-
 cty = cty[['HINDI', 'Registered Voters', 'vr_date']]
-
-
-# In[42]:
-
-
-avev_ctys_df
-
-
-# In[57]:
-
 
 county = pd.merge(avev_ctys_df, cty, how='left', on='HINDI')
 
-
-# In[64]:
-
-
 county.fillna(0, inplace=True)
-
-
-# In[66]:
-
-
 county[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']] = county[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']].astype(int)
 
-
 # ### Municipalities
-
-# In[71]:
-
-
 muni.reset_index(inplace=True)
-
-
-# In[73]:
-
-
 muni.columns = ['HINDI', 'Registered Voters', 'vr_date']
-
-
-# In[83]:
-
-
 muni = muni.append(cty.loc[73], ignore_index=True)
 
-
-# In[85]:
-
-
 munis = pd.merge(avev_munis_df, muni, how='left', on='HINDI')
-
-
-# In[86]:
-
-
 munis.fillna(0, inplace=True)
-
-
-# In[87]:
-
-
 munis[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']] = munis[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']].astype(int)
-
