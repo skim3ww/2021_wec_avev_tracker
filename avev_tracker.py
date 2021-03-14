@@ -182,7 +182,17 @@ munis = pd.merge(avev_munis_df, muni, how='left', on='HINDI')
 munis.fillna(0, inplace=True)
 munis[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']] = munis[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']].astype(int)
 
-# Visualize the Data
+# ------------------------------------------------------------------------------------------------------------------------------------
+# Getting Shapes
+from urllib.request import urlopen
+import json
+with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
+    counties = json.load(response)
+
+counties['features'] = [f for f in counties['features'] if f['properties']['STATE'] == '55']
+print(counties['features'][0])
+
+""" # Visualize the Data
 import plotly.express as px
 import dash
 import dash_core_components as dcc
@@ -255,4 +265,4 @@ def update_graph(option_day):
 
 # --------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True) """
