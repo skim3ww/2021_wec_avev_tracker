@@ -211,15 +211,47 @@ app.layout = html.Div([
             {'label': '2021-02-18', 'value':'20210218'}
         ],
         multi=False,
-        value=20210218,
+        value='20210218',
         style={'width': '40%'}
     ),
 
-    html.Div(id='output_container', children=[]),
+    html.Div(id='output_container'),
     html.Br(),
 
-    dcc.Graph(id='wi_map', figure={})
+    dcc.Graph(id='wi_map')
 ])
+# --------------------------------------------------------------------------------------------------------------
+## Connect the Plotly graphs with Dash Components
+@app.callback(
+    [Output(component_id='output_container', component_property='children'),
+     Output(component_id='wi_map', component_property='figure')
+    ],
+    [Input(component_id='date', component_property='value')]
+)
+
+def update_graph(option_day):
+    print(option_day)
+    print(type(option_day))
+
+    container = 'Absentee ballots on {}'.format(option_day)
+
+    cdf = county.copy()
+    cdf = cdf.loc[cdf['avev_date'] == option_day]
+
+    # Plotly Express
+    fig = px.choropleth(
+        data_frame=cdf,
+        locationmode='USA-states',
+        locations='Jurisdiction',
+        scope='usa', 
+        color='AbsenteeApplications',
+        hover_data = ['Jurisdiction', 'Registered Voters','AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee'],
+        color_continuous_scale=px.colors.sequential.YlOrBr
+    )
+
+    return container, fig
+
+
 
 # --------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
