@@ -24,7 +24,7 @@ pd.io.formats.format.IntArrayFormatter = _IntArrayFormatter
 
 pd.set_option('display.max_columns', None)
 
-
+""" 
 # ## Scraping the Registered Voter Population
 # I'm scraping all of the Voter Registration Statistics table rows and putting the date, title, and link into 
 # the vr_tbl.csv file. I'm going to use the file to loop through the links to get to the files.
@@ -118,8 +118,7 @@ for row in rows: # loop through all of the AVEV entries
     else: # don't want to loop through all of the AVEV entries not for Feb 2021
         break
     
-    time.sleep(1)
-
+    time.sleep(1) """
 
 # # Munging
 files = glob.glob('scrapped_files/*')
@@ -182,3 +181,46 @@ muni = muni.append(cty.loc[73], ignore_index=True)
 munis = pd.merge(avev_munis_df, muni, how='left', on='HINDI')
 munis.fillna(0, inplace=True)
 munis[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']] = munis[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']].astype(int)
+
+# Visualize the Data
+import plotly.express as px
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
+
+app = dash.Dash(__name__)
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## App layout
+app.layout = html.Div([
+
+    html.H1('February 2021 Primaries Absentee Voting', style={'text-align':'center'}),
+
+    dcc.Dropdown(
+        id='date',
+        options=[
+            {'label': '2021-01-27', 'value':'20210127'}, 
+            {'label': '2021-01-28', 'value':'20210128'}, 
+            {'label': '2021-01-29', 'value':'20210129'}, 
+            {'label': '2021-02-01', 'value':'20210201'}, 
+            {'label': '2021-02-03', 'value':'20210203'}, 
+            {'label': '2021-02-08', 'value':'20210208'}, 
+            {'label': '2021-02-15', 'value':'20210215'}, 
+            {'label': '2021-02-16', 'value':'20210216'}, 
+            {'label': '2021-02-18', 'value':'20210218'}
+        ],
+        multi=False,
+        value=20210218,
+        style={'width': '40%'}
+    ),
+
+    html.Div(id='output_container', children=[]),
+    html.Br(),
+
+    dcc.Graph(id='wi_map', figure={})
+])
+
+# --------------------------------------------------------------------------------------------------------------
+if __name__ == '__main__':
+    app.run_server(debug=True)
