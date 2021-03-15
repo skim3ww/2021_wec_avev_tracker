@@ -24,7 +24,7 @@ pd.io.formats.format.IntArrayFormatter = _IntArrayFormatter
 
 pd.set_option('display.max_columns', None)
 
-""" 
+
 # ## Scraping the Registered Voter Population
 # I'm scraping all of the Voter Registration Statistics table rows and putting the date, title, and link into 
 # the vr_tbl.csv file. I'm going to use the file to loop through the links to get to the files.
@@ -118,7 +118,7 @@ for row in rows: # loop through all of the AVEV entries
     else: # don't want to loop through all of the AVEV entries not for Feb 2021
         break
     
-    time.sleep(1) """
+    time.sleep(1)
 
 # # Munging
 files = glob.glob('scrapped_files/*')
