@@ -99,3 +99,8 @@ xmltodict==0.11.0
 zope.interface==5.2.0
 ```
 
+### Troubleshooting
+Use this to get pycairo installed:
+```
+sudo apt-get install libcairo2-dev libgirepository1.0-dev
+```
