@@ -173,6 +173,8 @@ county = pd.merge(avev_ctys_df, cty, how='left', on='HINDI')
 county.fillna(0, inplace=True)
 county[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']] = county[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee', 'Registered Voters']].astype(int)
 
+county['HINDI'] = county['HINDI'].astype(int)
+
 # ### Municipalities
 muni.reset_index(inplace=True)
 muni.columns = ['HINDI', 'Registered Voters', 'vr_date']
@@ -184,15 +186,23 @@ munis[['AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsent
 
 # ------------------------------------------------------------------------------------------------------------------------------------
 # Getting Shapes
+import geopandas as gpd
 from urllib.request import urlopen
 import json
-with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
+with urlopen('https://opendata.arcgis.com/datasets/8b8a0896378449538cf1138a969afbc6_3.geojson') as response:
     counties = json.load(response)
 
-counties['features'] = [f for f in counties['features'] if f['properties']['STATE'] == '55']
-print(counties['features'][0])
+from geojson_rewind import rewind
+counties = rewind(counties, rfc7946=False)
 
-""" # Visualize the Data
+#counties = gpd.read_file(counties)
+
+#counties = json.loads(counties.to_json())
+#counties['features'] = [f for f in counties['features'] if f['properties']['STATE'] == '55']
+#print(counties['features'][0])
+
+# ------------------------------------------------------------------------------------------------------------------------------------
+# Visualize the Data
 import plotly.express as px
 import dash
 import dash_core_components as dcc
@@ -245,19 +255,24 @@ def update_graph(option_day):
 
     container = 'Absentee ballots on {}'.format(option_day)
 
-    cdf = county.copy()
+    cdf = county[:-1].copy()
     cdf = cdf.loc[cdf['avev_date'] == option_day]
 
     # Plotly Express
     fig = px.choropleth(
         data_frame=cdf,
-        locationmode='USA-states',
-        locations='Jurisdiction',
+        geojson=counties,
+        #locationmode='USA-states',
+        locations='HINDI',
+        featureidkey='properties.DNR_CNTY_CODE',
         scope='usa', 
         color='AbsenteeApplications',
         hover_data = ['Jurisdiction', 'Registered Voters','AbsenteeApplications', 'BallotsSent', 'BallotsReturned', 'InPersonAbsentee'],
-        color_continuous_scale=px.colors.sequential.YlOrBr
+        color_continuous_scale='emrld'
     )
+
+    fig.update_geos(fitbounds='locations', visible=False)
+
 
     return container, fig
 
@@ -265,4 +280,4 @@ def update_graph(option_day):
 
 # --------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run_server(debug=True) """
+    app.run_server(debug=True)
